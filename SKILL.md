@@ -83,6 +83,8 @@ fills the placeholders and prints every `TODO(port)` left. Placeholders: `APP_ID
 PWA_DIR DEFAULT_PORT DEVELOPER CASAOS_CATEGORY LANG NATIVE_PLATFORM FONT_FILE BG_LIGHT BG_DARK
 TAGLINE_IT TAGLINE_EN DESCRIPTION_IT DESCRIPTION_EN SHORTCUT_NAME SHORTCUT_ROUTE`.
 The installer/updater messages are in Italian: translate them if the chosen language differs.
+The installer banner is the fixed COSAC logo (CasaOS App Converter): keep it, never redraw it
+with the app's name (the name already appears on the line below it).
 
 Then icons:
 ```bash
