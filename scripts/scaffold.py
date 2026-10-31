@@ -9,6 +9,7 @@ config.json holds every placeholder without underscores, for example:
   "DEFAULT_PORT": "8095", "DEVELOPER": "owner", "CASAOS_CATEGORY": "Finance", "LANG": "it",
   "NATIVE_PLATFORM": "Android", "FONT_FILE": "font.ttf", "BG_LIGHT": "#F6F1EA", "BG_DARK": "#15121F",
   "TAGLINE_IT": "...", "TAGLINE_EN": "...", "DESCRIPTION_IT": "...", "DESCRIPTION_EN": "...",
+  "VOLUME_DESC_IT": "Database e foto", "VOLUME_DESC_EN": "Database and photos",
   "SHORTCUT_NAME": "Nuovo elemento", "SHORTCUT_ROUTE": "edit"
 }
 Existing files are never overwritten unless --force is given. At the end it lists the TODO(port)
@@ -25,6 +26,12 @@ TEMPLATE = Path(__file__).resolve().parent.parent / 'assets' / 'template'
 PLACEHOLDER = re.compile(r'__([A-Z][A-Z0-9_]*[A-Z0-9])__')
 # Filled at build time by the Vite plugin, not by this script.
 BUILD_TIME = {'BUILD', 'FILES'}
+# Texts that land inside double quotes in the compose YAML (written by an unquoted bash heredoc),
+# in index.html attributes and in the manifest JSON: no character there may close the quotes or
+# be expanded by bash.
+QUOTED_TEXT = {'APP_NAME', 'DEVELOPER', 'CASAOS_CATEGORY', 'TAGLINE_IT', 'TAGLINE_EN',
+               'DESCRIPTION_IT', 'DESCRIPTION_EN', 'VOLUME_DESC_IT', 'VOLUME_DESC_EN'}
+UNSAFE_TEXT = re.compile(r'["\\$`\n\r]')
 
 
 def main() -> int:
@@ -37,6 +44,11 @@ def main() -> int:
     values = json.loads(Path(args.config).read_text(encoding='utf-8'))
     if not re.fullmatch(r'[a-z][a-z0-9-]{1,30}', values.get('APP_ID', '')):
         print('APP_ID must be lowercase letters, digits or "-" (it names the container, the image and the update command).')
+        return 1
+    unsafe = [key for key in sorted(QUOTED_TEXT) if UNSAFE_TEXT.search(str(values.get(key, '')))]
+    if unsafe:
+        print('These values must not contain double quotes, backslashes, "$", backticks or newlines '
+              '(they go inside quoted YAML, HTML and JSON written by bash): ' + ', '.join(unsafe))
         return 1
     target = Path(args.target)
     missing: set[str] = set()

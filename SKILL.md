@@ -81,7 +81,8 @@ It copies `assets/template/` (accounts, per-user SQLite, routes skeleton, Web Pu
 Vite config, nav stack, store, WebAuthn lock, Kotlin Random port, Dockerfile, installer, updater),
 fills the placeholders and prints every `TODO(port)` left. Placeholders: `APP_ID APP_NAME REPO BRANCH
 PWA_DIR DEFAULT_PORT DEVELOPER CASAOS_CATEGORY LANG NATIVE_PLATFORM FONT_FILE BG_LIGHT BG_DARK
-TAGLINE_IT TAGLINE_EN DESCRIPTION_IT DESCRIPTION_EN SHORTCUT_NAME SHORTCUT_ROUTE`.
+TAGLINE_IT TAGLINE_EN DESCRIPTION_IT DESCRIPTION_EN VOLUME_DESC_IT VOLUME_DESC_EN SHORTCUT_NAME SHORTCUT_ROUTE`
+(`VOLUME_DESC_*`: what the data folder holds, shown by CasaOS, e.g. "Database e foto").
 The installer/updater messages are in Italian: translate them if the chosen language differs.
 The installer banner is the fixed COSAC logo (CasaOS App Converter): keep it, never redraw it
 with the app's name (the name already appears on the line below it).

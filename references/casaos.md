@@ -78,7 +78,9 @@ only if the intake chose "invite code".
 Service level: `ports` (container 8080, description en_us/it_it), `volumes` (`/data`). Top level:
 `architectures [amd64, arm64]`, `main`, `author`, `developer`, `category` (Finance, Utilities,
 Productivity, Media...), `icon` (raw GitHub URL of `web/public/icon-512.png`), `title`, `tagline`,
-`description` (en_us + it_it at least), `port_map`, `scheme: http`, `index: /`. Files live in
+`description` (en_us + it_it at least), `port_map`, `scheme: http`, `index: /`. Every text value
+is in double quotes: an unquoted `Dueffe Garage: schede auto…` stops `docker compose` with
+`mapping values are not allowed in this context`. Files live in
 `/var/lib/casaos/apps/<app>/` (`docker-compose.yml` + `.env`), so the app shows in the CasaOS
 dashboard with its icon and opens on click. Outside CasaOS the same files go to `/opt/<app>/`.
 

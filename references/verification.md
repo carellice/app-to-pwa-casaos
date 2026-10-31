@@ -9,6 +9,18 @@ cd PWA/web && npm run build          # tsc --noEmit && vite build; zero type err
 cd PWA/server && npm install
 bash -n PWA/casaos/installa.sh && bash -n PWA/casaos/aggiorna.sh && sh -n PWA/casaos/docker-entrypoint.sh
 ```
+`bash -n` does not see the YAML inside the heredoc. Render the compose file the installer writes, for
+both `MODE=local` (extra HTTPS port) and another mode, and parse it:
+```bash
+for MODE in local tailscale; do
+  APP=x IMAGE=x:latest REPO=o/r BRANCH=main PORT=8095 MODE=$MODE bash -c '
+    https_ports=""; [ "$MODE" = local ] && https_ports="      - \"\${HTTPS_PORT}:8443\""
+    '"$(sed -n '/^cat > "\$APP_DIR\/docker-compose.yml" <<EOF/,/^EOF$/p' PWA/casaos/installa.sh \
+        | sed 's#"\$APP_DIR/docker-compose.yml"#/dev/stdout#')" > compose-$MODE.yml
+  docker compose -f compose-$MODE.yml config -q \
+    || python -c "import sys, yaml; yaml.safe_load(open(sys.argv[1]))" compose-$MODE.yml
+done
+```
 If Docker is available: `docker build -t test PWA` and run it with a temp volume.
 
 ## 2. Server API with curl

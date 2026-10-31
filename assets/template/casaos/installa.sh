@@ -290,26 +290,28 @@ $https_ports
       volumes:
         - container: /data
           description:
-            en_us: Database and receipts
-            it_it: Database e scontrini
+            en_us: "__VOLUME_DESC_EN__"
+            it_it: "__VOLUME_DESC_IT__"
 x-casaos:
   architectures:
     - amd64
     - arm64
   main: $APP
-  author: __DEVELOPER__
-  developer: __DEVELOPER__
-  category: __CASAOS_CATEGORY__
+  author: "__DEVELOPER__"
+  developer: "__DEVELOPER__"
+  category: "__CASAOS_CATEGORY__"
   icon: https://raw.githubusercontent.com/$REPO/$BRANCH/__PWA_DIR__/web/public/icon-512.png
+  # Text values stay in double quotes: a ": " or a leading "-", "[", "*"... in an app's description
+  # would otherwise break the YAML ("mapping values are not allowed in this context").
   title:
-    en_us: __APP_NAME__
-    it_it: __APP_NAME__
+    en_us: "__APP_NAME__"
+    it_it: "__APP_NAME__"
   tagline:
-    en_us: __TAGLINE_EN__
-    it_it: __TAGLINE_IT__
+    en_us: "__TAGLINE_EN__"
+    it_it: "__TAGLINE_IT__"
   description:
-    en_us: __DESCRIPTION_EN__
-    it_it: __DESCRIPTION_IT__
+    en_us: "__DESCRIPTION_EN__"
+    it_it: "__DESCRIPTION_IT__"
   port_map: "$PORT"
   scheme: http
   index: /
