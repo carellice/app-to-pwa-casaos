@@ -32,7 +32,8 @@ so the app listens HTTP only. Ends with `exec "$@"`.
 Run as `curl -fsSL https://raw.githubusercontent.com/<repo>/<branch>/<dir>/casaos/installa.sh | sudo bash`,
 or `sudo bash <dir>/casaos/installa.sh` from a clone. Behavior, in order:
 
-1. Banner, then checks: root, `docker`, `docker info`, Compose v2 plugin or `docker-compose`,
+1. Banner: the fixed COSAC ASCII logo (CasaOS App Converter) with the app name on the line below;
+   keep it as is for every app, do not redraw it with the app's name. Then checks: root, `docker`, `docker info`, Compose v2 plugin or `docker-compose`,
    CasaOS presence (`/var/lib/casaos/apps` or a casaos service), CPU arch (warn on armv7).
 2. Questions read from `/dev/tty` (works under `curl | bash`), with defaults in brackets.
 3. Existing install (`.env` in the app dir): offer "update keeping data and settings" (skips the

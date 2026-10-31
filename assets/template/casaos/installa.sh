@@ -53,12 +53,13 @@ ask_yes() { # ask_yes "domanda" s|n
 printf "${V}${B}"
 cat <<'EOF'
 
-   __  __
-  |  \/  | ___  _ __   ___ _   _
-  | |\/| |/ _ \| '_ \ / _ \ | | |
-  | |  | | (_) | | | |  __/ |_| |
-  |_|  |_|\___/|_| |_|\___|\__, |
-                           |___/   PWA per CasaOS
+    ____   ___   ____      _      ____
+   / ___| / _ \ / ___|    / \    / ___|
+  | |    | | | |\___ \   / _ \  | |
+  | |___ | |_| | ___) | / ___ \ | |___
+   \____| \___/ |____/ /_/   \_\ \____|
+
+  CasaOS App Converter · installazione di __APP_NAME__
 EOF
 printf "${R}\n"
 info "Ti guido passo passo. Premi Invio per accettare il valore tra parentesi."
