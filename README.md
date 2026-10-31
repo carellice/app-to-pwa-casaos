@@ -30,7 +30,8 @@ PWA/
 - **Native features mapped**: notifications → Web Push, background workers → server jobs, biometric lock →
   WebAuthn passkey, camera, voice, PDF/share, backups compatible with the native app.
 - **One-command install** on the server, with HTTPS through Tailscale, a local certificate or your reverse proxy;
-  the app appears in the CasaOS dashboard.
+  the app appears in the CasaOS dashboard. Several apps can share one server: each gets its own Tailscale HTTPS
+  port automatically (443, then 8443, 10000...), without taking over the others' links.
 - **Nightly auto-update**: when you bump the version on GitHub, servers rebuild, back up every database, switch
   over and roll back by themselves if the new version doesn't start.
 
@@ -69,6 +70,11 @@ Screen).
 
 The installer and update messages are written in Italian; Claude translates them to your app's language during
 the conversion.
+
+## Updating the skill
+
+Skills don't update by themselves. Claude Code: `git -C ~/.claude/skills/app-to-pwa-casaos pull`.
+Claude.ai: download the new `.skill` from the latest release and add it again.
 
 ## Contents
 

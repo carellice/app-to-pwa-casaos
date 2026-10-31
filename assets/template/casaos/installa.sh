@@ -97,6 +97,8 @@ UPDATE=0
 if [ -f "$ENV_FILE" ]; then
   # shellcheck disable=SC1090
   set -a; . "$ENV_FILE"; set +a
+  # La porta di prima: serve a ritrovare il collegamento Tailscale anche se ora la porta cambia.
+  PREV_PORT="${PORT:-}"
   step "__APP_NAME__ è già installata"
   info "Dati in: ${DATA_DIR:-?}"
   if ask_yes "Aggiorno all'ultima versione mantenendo dati e impostazioni?" s; then
@@ -134,6 +136,29 @@ find_tailscale() {
   name=$(docker ps --format '{{.Names}} {{.Image}}' | awk 'tolower($2) ~ /tailscale/ {print $1; exit}')
   if [ -n "$name" ] && docker exec "$name" tailscale status >/dev/null 2>&1; then TS=(docker exec "$name" tailscale); return 0; fi
   return 1
+}
+
+# Le app già collegate a Tailscale sul server, una riga "porta destinazione" per ciascuna,
+# lette da "tailscale serve status" (https://nome.ts.net[:porta] seguito da "|-- / proxy <destinazione>").
+ts_served() {
+  "${TS[@]}" serve status 2>/dev/null | awk '
+    /^https:\/\// { n = split($1, a, ":"); port = (n > 2) ? a[3] : 443; sub(/\/.*/, "", port); next }
+    index($0, "|--") == 1 && port != "" { print port, $NF; port = "" }'
+}
+
+# Sceglie la porta HTTPS di Tailscale per questa app: quella che la serve già, poi quella salvata
+# nell'installazione precedente se è libera, poi la prima libera. Stampa niente se sono tutte occupate.
+ts_port_for() {
+  local saved="$1" served port target own
+  served=$(ts_served)
+  while read -r port target; do
+    for own in $OWN_TARGETS; do
+      [ -n "$port" ] && [ "$target" = "$own" ] && { echo "$port"; return; }
+    done
+  done <<< "$served"
+  for port in $saved 443 8443 10000 10001 10002 10003 10004 10005 10006 10007 10008 10009; do
+    echo "$served" | awk '{print $1}' | grep -qx "$port" || { echo "$port"; return; }
+  done
 }
 
 LAN_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
@@ -304,23 +329,46 @@ curl -fs "http://127.0.0.1:$PORT/api/session" >/dev/null 2>&1 || { printf "\n"; 
 # --- HTTPS -------------------------------------------------------------------------------------
 
 URL_PHONE="http://$LAN_IP:$PORT"
+TARGET="http://127.0.0.1:$PORT"
+OWN_TARGETS="$TARGET"
+[ -n "${PREV_PORT:-}" ] && OWN_TARGETS="$OWN_TARGETS http://127.0.0.1:$PREV_PORT"
+sed -i '/^TS_HTTPS_PORT=/d' "$ENV_FILE"
 if [ "$MODE" = tailscale ]; then
   step "Collego Tailscale"
   find_tailscale || true
-  if [ ${#TS[@]} -gt 0 ] && "${TS[@]}" serve --bg --https=443 "http://127.0.0.1:$PORT" >/dev/null 2>&1; then
+  TS_PORT=""
+  if [ ${#TS[@]} -gt 0 ]; then
+    # Il nome Tailscale del server è uno solo: ogni app ha la sua porta HTTPS.
+    TS_PORT=$(ts_port_for "${TS_HTTPS_PORT:-}")
+  fi
+  if [ -n "$TS_PORT" ] && "${TS[@]}" serve --bg --https="$TS_PORT" "$TARGET" >/dev/null 2>&1; then
+    echo "TS_HTTPS_PORT=$TS_PORT" >> "$ENV_FILE"
     TS_NAME=$("${TS[@]}" status --json 2>/dev/null | grep -o '"DNSName": *"[^"]*"' | head -n1 | sed 's/.*"\([^"]*\)"$/\1/; s/\.$//')
     if [ -n "$TS_NAME" ]; then
       URL_PHONE="https://$TS_NAME"
+      [ "$TS_PORT" = 443 ] || URL_PHONE="$URL_PHONE:$TS_PORT"
       ok "__APP_NAME__ è su $URL_PHONE (solo per i dispositivi del tuo Tailscale)"
+      [ "$TS_PORT" = 443 ] || info "La porta 443 è già usata da un'altra app: __APP_NAME__ usa la $TS_PORT."
     else
-      warn "Collegato, ma non trovo il nome del server: guarda con  ${TS[*]} serve status"
+      warn "Collegato sulla porta $TS_PORT, ma non trovo il nome del server: guarda con  ${TS[*]} serve status"
     fi
+  elif [ ${#TS[@]} -gt 0 ] && [ -z "$TS_PORT" ]; then
+    warn "Tutte le porte HTTPS di Tailscale previste sono già usate da altre app."
+    info "  Liberane una con  ${TS[*]} serve --https=<porta> off  e rilancia questo script."
   else
     warn "tailscale serve non riuscito. Abilita HTTPS nel pannello Tailscale (DNS → HTTPS Certificates) e rilancia:"
-    info "  tailscale serve --bg --https=443 http://127.0.0.1:$PORT"
+    info "  tailscale serve --bg --https=${TS_PORT:-443} $TARGET"
   fi
-elif [ "$MODE" = local ]; then
-  URL_PHONE="https://$(echo "$HTTPS_HOSTS" | cut -d, -f1):$HTTPS_PORT"
+else
+  # Non più su Tailscale: toglie il collegamento rimasto da un'installazione precedente.
+  if find_tailscale; then
+    ts_served | while read -r port target; do
+      for own in $OWN_TARGETS; do
+        [ "$target" = "$own" ] && "${TS[@]}" serve --https="$port" off >/dev/null 2>&1 || true
+      done
+    done
+  fi
+  [ "$MODE" = local ] && URL_PHONE="https://$(echo "$HTTPS_HOSTS" | cut -d, -f1):$HTTPS_PORT"
 fi
 
 # --- aggiornamenti -----------------------------------------------------------------------------

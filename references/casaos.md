@@ -52,9 +52,16 @@ or `sudo bash <dir>/casaos/installa.sh` from a clone. Behavior, in order:
    `compose up -d --force-recreate --remove-orphans`, restart `casaos-app-management` so the app
    appears in the dashboard at once.
 8. Health check: poll `http://127.0.0.1:$PORT/api/session` up to 2 minutes.
-9. Tailscale mode: `tailscale serve --bg --https=443 http://127.0.0.1:$PORT`, read the
-   `DNSName` from `tailscale status --json`, print `https://<machine>.<tailnet>.ts.net`; if serve
-   fails, explain enabling HTTPS certificates in the Tailscale admin (DNS → HTTPS Certificates).
+9. Tailscale mode: the server has one Tailscale name, so every app gets its own HTTPS port,
+   chosen automatically (`ts_served` parses `tailscale serve status`; `ts_port_for` picks): the port
+   already serving this app (also when its local port changed: `PREV_PORT` from the old `.env`),
+   else the port saved in `.env` (`TS_HTTPS_PORT`) if still free, else the first free of 443, 8443,
+   10000–10009. Ports used by anything else (other apps, static file serves, Funnel) are never
+   taken over. Then `tailscale serve --bg --https=<port> http://127.0.0.1:$PORT`, save
+   `TS_HTTPS_PORT`, read the `DNSName` from `tailscale status --json` and print
+   `https://<machine>.<tailnet>.ts.net` (plus `:<port>` when not 443). If serve fails, explain
+   enabling HTTPS certificates in the Tailscale admin (DNS → HTTPS Certificates). When the app is
+   reinstalled in another mode, its old Tailscale mapping is switched off.
 10. Install `/usr/local/bin/<app>-aggiorna` and offer the nightly timer (default yes; kept if
     already enabled).
 11. Final instructions: URLs (LAN and phone), certificate steps for local mode, a warning for
@@ -78,7 +85,9 @@ dashboard with its icon and opens on click. Outside CasaOS the same files go to 
 
 - **Tailscale** (recommended): real certificates, works away from home, only the user's devices
   can reach it, WebAuthn works (hostname). Needs MagicDNS + HTTPS certificates enabled in the
-  tailnet. `tailscale serve --bg` persists across reboots.
+  tailnet. `tailscale serve --bg` persists across reboots. Several apps on one server share the
+  name and differ by port (`https://casaos.tailXXXX.ts.net`, `…:8443`, `…:10000`); `tailscale
+  serve status` lists them.
 - **Local CA**: no extra service; each phone installs the CA once. WebAuthn works only if the user
   opens it by a hostname in the cert (`hostname.local`), not the IP.
 - **HTTP behind proxy/tunnel**: for users with Nginx Proxy Manager, Caddy, Cloudflare Tunnel. Warn
