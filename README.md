@@ -25,7 +25,10 @@ PWA/
 
 - **Identical UI**: same colors, fonts, shapes, copy. Compose/SwiftUI springs and easings converted exactly,
   Kotlin's `Random(seed)` reproduced bit for bit so generated shapes match, Material icons from the same set.
-- **Your native app stays untouched**: everything lives in its own folder.
+- **Your native app stays untouched**: everything lives in its own folder. Unless you want the
+  opposite: an optional **server mode** in the native app's settings makes the phone use the same
+  account and data as the PWA (local copy for offline reading, changes from the PWA show up within
+  30 seconds).
 - **Accounts**: username and password, no email. Each person gets private data (their own SQLite file).
 - **Native features mapped**: notifications → Web Push, background workers → server jobs, biometric lock →
   WebAuthn passkey, camera, voice, PDF/share, backups compatible with the native app.
@@ -36,7 +39,7 @@ PWA/
   over and roll back by themselves if the new version doesn't start.
 
 Claude starts by asking a few multiple-choice questions (accounts, sign-up policy, features to port, HTTPS,
-updates, language), studies your app and writes a porting checklist before touching code.
+updates, language, native app on the server), studies your app and writes a porting checklist before touching code.
 
 ## Install the skill
 
@@ -81,8 +84,9 @@ Claude.ai: download the new `.skill` from the latest release and add it again.
 | Path | What it is |
 |---|---|
 | `SKILL.md` | The workflow Claude follows |
-| `references/` | Study of the native app, UI fidelity, server, web platform, CasaOS deployment, verification |
+| `references/` | Study of the native app, UI fidelity, server, web platform, CasaOS deployment, native app server mode, verification |
 | `assets/template/` | Ready files: accounts, per-user SQLite, routes, Web Push, service worker, nav stack, store, WebAuthn lock, Kotlin Random port, Dockerfile, installer, updater, porting checklist |
+| `assets/native-android/` | Server mode for an Android app: API client with encrypted session, network security config |
 | `scripts/scaffold.py` | Creates the PWA folder from the templates with your app's names |
 | `scripts/app_icons.py` | PWA icons from your launcher icon (Pillow) |
 | `scripts/material_icons.mjs` | Material Icons as inline SVG paths, same glyphs as Compose |

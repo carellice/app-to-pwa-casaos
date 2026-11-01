@@ -10,7 +10,9 @@ indistinguishable from the original (colors, fonts, shapes, springs, gestures, c
 tiny backend that runs in Docker on the user's home server, installed with one `curl | sudo bash`
 command and kept up to date every night.
 
-The native app is never modified. Everything new lives in one folder (default `PWA/`).
+The native app is never modified, with one opt-in exception: if the user wants it (intake round 3),
+the native app gets a "server mode" switch in its settings to use the same account and data as the
+PWA. Everything else new lives in one folder (default `PWA/`).
 
 ## What you will deliver
 
@@ -24,6 +26,9 @@ PWA/
 ├── README.md   install, accounts, updates, differences from the native app, development
 └── .gitattributes .gitignore .dockerignore
 ```
+
+Optional, in the native app (server mode): a settings switch, an API client and a sync layer that
+make the phone use the PWA server's account and data, with the local database as a cache.
 
 Architecture choices, and why they hold up:
 - **Same data model as the native database** (table and column names) and **same JSON backup format**, so users can move their data between the phone app and the PWA in both directions.
@@ -42,7 +47,7 @@ result depends on them more than on anything else.
 First inspect the repo (platform, existing backup/export, notifications, biometrics, AI/API keys,
 languages) so you only ask what you cannot infer, and so the options you offer are concrete.
 Then ask with the multiple-choice question tool (`AskUserQuestion`; max 4 questions per call, so use
-two rounds). Put the recommended option first with "(Recommended)". Ask in the user's language.
+two rounds, plus a one-question third round). Put the recommended option first with "(Recommended)". Ask in the user's language.
 
 **Round 1 — the product**
 1. *Who uses it and whose data is it?* — Separate accounts, each with private data (Recommended) · Shared data for the whole household, one login each · One shared password, no accounts · Choose per account (create new space or join one with an invite code).
@@ -55,6 +60,14 @@ two rounds). Put the recommended option first with "(Recommended)". Ask in the u
 2. *Updates* — Nightly automatic update with backup and rollback (Recommended) · Manual command only · Both, user chooses at install.
 3. *Where does the installer download from?* — This GitHub repo, branch main (Recommended) · Another branch · Private repo (needs a token: warn this complicates curl | bash).
 4. *Language of the app UI, installer and README* — Same as the native app (Recommended) · Italian · English · Other.
+
+**Round 3 — the native app**
+1. *Do you want to reach the server's data from the native app too?* — Yes: an optional "server
+   mode" in the native app's settings, off by default; on, the app uses the same account and data
+   as the PWA, keeping a local copy for offline reading (Recommended when the user will use both) ·
+   No: the native app stays phone-only (data moves between the two only through the JSON backup).
+   Explain in the option text that it modifies the native app and needs a new release of it, and
+   that offline the native app can read but not change data in server mode.
 
 Also settle, without a question if the repo or the user already answered: folder name (`PWA`),
 app id (lowercase, names the container/image/command), default port (pick a free-looking one like
@@ -114,7 +127,15 @@ updater; adapt texts, the CasaOS metadata, the backup step (database file names)
 instructions printed by the installer. Keep `.gitattributes` (LF for `*.sh` and `Dockerfile`):
 a CRLF script breaks on Linux with `$'\r': command not found`.
 
-### 7. Verify
+### 7. Native app on the server (only if chosen in round 3)
+
+Read `references/native-server-mode.md`. Android: copy `assets/native-android/ServerClient.kt`
+and `network_security_config.xml`, write the app-specific `ServerSync`, route every repository
+write through it, add the settings screen, the 30-second refresh and the reminder handling, and
+test it on an emulator against the PWA server running locally. Other platforms: same design with
+their HTTP and secure storage APIs. Then release the native app with its usual process.
+
+### 8. Verify
 
 Read `references/verification.md` and do all of it: typecheck/build, server API with curl
 (including account isolation), every flow in a 375×812 browser in light and dark, side-by-side
@@ -122,7 +143,7 @@ with the native app, the updater simulated with stub `docker`/`curl`, the instal
 Report honestly what could not be verified locally (Docker build, real CasaOS, push on a real phone,
 Tailscale, WebAuthn on a hostname).
 
-### 8. Deliver
+### 9. Deliver
 
 README (install command, HTTPS modes, accounts, updates, differences from the native app,
 development), `PORTING.md` statuses updated. Commit and push only if the user said so, respecting
@@ -146,3 +167,5 @@ works only after the folder is pushed, and that a release = bump `server/package
 - Windows dev box: Git Bash paths (`/tmp/...`) are not valid for Node; use `cygpath -w`. `PATH` entries must be `/c/...`, not `C:/...`.
 - WebAuthn needs HTTPS and a hostname: it never works on `https://192.168.x.x`.
 - The updater's DB backup must cover every account database, not a single file.
+- Native server mode: rename an uploaded image to its server name only after the row is saved, and
+  check every caller of a repository write: a failed save must keep the form open.
