@@ -26,7 +26,10 @@ import javax.crypto.spec.GCMParameterSpec
 /** __APP_NAME__ server (the PWA hosted on CasaOS) the app keeps its data on, with the account logged in. */
 data class ServerConfig(val url: String, val username: String, val token: String)
 
-class ServerException(message: String, val status: Int = 0) : Exception(message)
+class ServerException(message: String, val status: Int = 0) : Exception(message) {
+    /** Server not reachable (no connection, Tailscale off, server or proxy down): worth trying again later. */
+    val offline: Boolean get() = status == 0 || status in 502..504
+}
 
 /** Encrypts small secrets with an AES key that never leaves the Android Keystore. */
 private object SecretBox {

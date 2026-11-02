@@ -27,8 +27,8 @@ PWA/
   Kotlin's `Random(seed)` reproduced bit for bit so generated shapes match, Material icons from the same set.
 - **Your native app stays untouched**: everything lives in its own folder. Unless you want the
   opposite: an optional **server mode** in the native app's settings makes the phone use the same
-  account and data as the PWA (local copy for offline reading, changes from the PWA show up within
-  30 seconds).
+  account and data as the PWA (it keeps working offline and sends the changes when the server is
+  back; changes from the PWA show up within 30 seconds).
 - **Accounts**: username and password, no email. Each person gets private data (their own SQLite file).
 - **Native features mapped**: notifications → Web Push, background workers → server jobs, biometric lock →
   WebAuthn passkey, camera, voice, PDF/share, backups compatible with the native app.

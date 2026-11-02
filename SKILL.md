@@ -64,10 +64,11 @@ two rounds, plus a one-question third round). Put the recommended option first w
 **Round 3 — the native app**
 1. *Do you want to reach the server's data from the native app too?* — Yes: an optional "server
    mode" in the native app's settings, off by default; on, the app uses the same account and data
-   as the PWA, keeping a local copy for offline reading (Recommended when the user will use both) ·
+   as the PWA, keeping a local copy that also works offline (Recommended when the user will use both) ·
    No: the native app stays phone-only (data moves between the two only through the JSON backup).
    Explain in the option text that it modifies the native app and needs a new release of it, and
-   that offline the native app can read but not change data in server mode.
+   that offline the changes wait on the phone and are sent when the server is back (on conflicts
+   the last change to arrive wins).
 
 Also settle, without a question if the repo or the user already answered: folder name (`PWA`),
 app id (lowercase, names the container/image/command), default port (pick a free-looking one like
@@ -131,8 +132,8 @@ a CRLF script breaks on Linux with `$'\r': command not found`.
 
 Read `references/native-server-mode.md`. Android: copy `assets/native-android/ServerClient.kt`
 and `network_security_config.xml`, write the app-specific `ServerSync`, route every repository
-write through it, add the settings screen, the 30-second refresh and the reminder handling, and
-test it on an emulator against the PWA server running locally. Other platforms: same design with
+write through it with the offline outbox, add the settings screen, the 30-second refresh and
+the reminder handling, and test it on an emulator against the PWA server running locally. Other platforms: same design with
 their HTTP and secure storage APIs. Then release the native app with its usual process.
 
 ### 8. Verify
