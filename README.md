@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/icon.png" alt="app-to-pwa-casaos icon" width="160">
+</p>
+
 # app-to-pwa-casaos
 
 A [Claude](https://claude.com) skill that turns your native mobile app into a **Progressive Web App that looks,
